@@ -293,13 +293,14 @@
 
     <section class="apply" id="apply">
       <div class="container apply-grid">
-        <div class="apply-copy"><div class="eyebrow"><span data-lang="uz">Boshlashga tayyormisiz?</span><span data-lang="en">Ready to begin?</span></div><h2><span data-lang="uz">Kursga ariza qoldiring.</span><span data-lang="en">Apply for a course.</span></h2><p><span data-lang="uz">Formani to‘ldiring. Telegram bot integratsiyasi keyingi bosqichda ulanadi.</span><span data-lang="en">Complete the form. Telegram bot delivery will be connected in the next step.</span></p></div>
+        <div class="apply-copy"><div class="eyebrow"><span data-lang="uz">Boshlashga tayyormisiz?</span><span data-lang="en">Ready to begin?</span></div><h2><span data-lang="uz">Kursga ariza qoldiring.</span><span data-lang="en">Apply for a course.</span></h2><p><span data-lang="uz">Formani to‘ldiring. Arizangiz Nova Academy jamoasiga darhol yuboriladi.</span><span data-lang="en">Complete the form. Your application will be sent directly to the Nova Academy team.</span></p></div>
         <form id="leadForm">
           <div class="field"><label><span data-lang="uz">Ism</span><span data-lang="en">Name</span></label><input id="name" required placeholder="Avazbek" /></div>
           <div class="field"><label><span data-lang="uz">Telefon</span><span data-lang="en">Phone</span></label><input id="phone" required placeholder="+998 90 123 45 67" /></div>
           <div class="field full"><label><span data-lang="uz">Kurs</span><span data-lang="en">Course</span></label><select id="course" required><option value="">—</option><option>IELTS</option><option>General English</option><option>SAT</option></select></div>
-          <button class="btn" type="submit"><span data-lang="uz">Ariza yuborish</span><span data-lang="en">Submit application</span></button>
-          <p id="formStatus"><span data-lang="uz">Demo rejim: hozircha ma’lumot Telegramga yuborilmaydi.</span><span data-lang="en">Demo mode: submissions are not sent to Telegram yet.</span></p>
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;pointer-events:none" />
+          <button class="btn" id="submitBtn" type="submit"><span data-lang="uz">Ariza yuborish</span><span data-lang="en">Submit application</span></button>
+          <p id="formStatus"><span data-lang="uz">Ma’lumotlaringiz xavfsiz tarzda yuboriladi.</span><span data-lang="en">Your details will be sent securely.</span></p>
         </form>
       </div>
     </section>
@@ -355,12 +356,57 @@
     });
     window.addEventListener('resize',()=>{ if(window.innerWidth>900) toggleMenu(false); });
 
-    document.getElementById('leadForm').addEventListener('submit',e=>{
+    const leadForm=document.getElementById('leadForm');
+    const submitBtn=document.getElementById('submitBtn');
+    const formStatus=document.getElementById('formStatus');
+    const registrationEndpoint='https://nova-academy-registration.davlatovh19106.workers.dev/';
+
+    leadForm.addEventListener('submit',async e=>{
       e.preventDefault();
-      const status=document.getElementById('formStatus');
       const uz=body.classList.contains('lang-uz');
-      status.textContent=uz ? 'Demo: forma ishlayapti. Keyingi bosqichda Telegram botga ulaymiz.' : 'Demo: the form works. We will connect it to your Telegram bot in the next step.';
-      status.style.color='#1f6b4f';
+      const name=document.getElementById('name').value.trim();
+      const phone=document.getElementById('phone').value.trim();
+      const course=document.getElementById('course').value;
+      const website=document.getElementById('website').value;
+
+      if(!name || !phone || !course){
+        formStatus.textContent=uz ? 'Iltimos, barcha maydonlarni to‘ldiring.' : 'Please complete all fields.';
+        formStatus.style.color='#b42318';
+        return;
+      }
+
+      submitBtn.disabled=true;
+      submitBtn.style.opacity='.65';
+      submitBtn.style.cursor='wait';
+      formStatus.textContent=uz ? 'Ariza yuborilmoqda…' : 'Sending your application…';
+      formStatus.style.color='inherit';
+
+      try{
+        const response=await fetch(registrationEndpoint,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({name,phone,course,language:uz?'uz':'en',website})
+        });
+
+        let result={};
+        try{ result=await response.json(); }catch(_e){}
+
+        if(!response.ok || !result.success){
+          throw new Error(result.message || 'Request failed');
+        }
+
+        formStatus.textContent=result.message || (uz ? 'Arizangiz muvaffaqiyatli yuborildi!' : 'Your application has been submitted successfully!');
+        formStatus.style.color='#55c98a';
+        leadForm.reset();
+      }catch(err){
+        console.error('Registration error:',err);
+        formStatus.textContent=uz ? 'Arizani yuborib bo‘lmadi. Iltimos, qayta urinib ko‘ring.' : 'We could not send your application. Please try again.';
+        formStatus.style.color='#ffb4ab';
+      }finally{
+        submitBtn.disabled=false;
+        submitBtn.style.opacity='';
+        submitBtn.style.cursor='';
+      }
     });
   </script>
 </body>
