@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Nova Academy</title>
+  <script>
+    (function () {
+      var path = window.location.pathname.toLowerCase();
+
+      // Instagram may turn /#apply into /%23apply.
+      // GitHub Pages sends missing routes to this custom 404 page,
+      // so catch that route here and send it to the real form section.
+      if (
+        path === "/%23apply" ||
+        path === "/%23apply/" ||
+        path === "/%2523apply" ||
+        path === "/%2523apply/"
+      ) {
+        window.location.replace("https://novaacademy.uz/#apply");
+        return;
+      }
+
+      // For every other unknown URL, return visitors to the homepage.
+      window.location.replace("https://novaacademy.uz/");
+    })();
+  </script>
+</head>
+<body>
+  <p>Nova Academy sahifasiga yo‘naltirilmoqda…</p>
+  <p><a href="https://novaacademy.uz/#apply">Kurslarga yozilish</a></p>
+</body>
+</html>
